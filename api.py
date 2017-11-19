@@ -81,7 +81,7 @@ class YahooFantasySports:
             'client_id': self.client_id,
             'client_secret': self.client_secret,
             'redirect_uri': 'oob',
-            'refresh_token': refresh_token,
+            'refresh_token': self.refresh_token,
             'grant_type': 'refresh_token',
         }
         response = requests.post(self.access_token_url, data=data)
