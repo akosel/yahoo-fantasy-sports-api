@@ -85,9 +85,17 @@ class YahooFantasySports:
         self.set_tokens(response.json())
         self.cache_tokens()
 
-    def get(self, path):
+    def get(self, path, is_retry=False):
         url = '{}/{}'.format(self.base_url, path)
         response = requests.get(url, params={'format':'json'}, headers={ 'Authorization': 'Bearer {}'.format(self.access_token)})
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            if e.response.status_code == 401 and not is_retry:
+                os.remove('.tokens.json')
+                self.get_initial_tokens()
+                return self.get(path)
+            raise
         return response.json()
 
     def get_standings(self):
@@ -96,4 +104,12 @@ class YahooFantasySports:
 
     def get_roster(self, team_id):
         path = 'team/nfl.l.{}.t.{}/roster/players'.format(self.league_id, team_id)
+        return self.get(path)
+
+    def get_player(self, player_id, week):
+        path = 'league/nfl.l.{}/players;player_keys={}/stats;type=week;week={}'.format(self.league_id, player_id, week)
+        return self.get(path)
+
+    def get_settings(self):
+        path = 'league/nfl.l.{}/settings'.format(self.league_id)
         return self.get(path)
